@@ -1,0 +1,25 @@
+---
+- name: Check SAP HANA replication status on primary node
+  shell: "su - {{ hana_sid|lower }}adm -c 'hdbnsutil -sr_state --sapcontrol=1'"
+  args:
+    warn: false
+  register: repl_status_primary
+  changed_when: False
+  when: hana_sid is defined
+
+- name: Set SAP HANA replication status variable for primary node
+  set_fact:
+    replication_primary: "yes"
+  when: repl_status_primary.stdout.find('operation mode=primary') != -1 and repl_status_primary.stdout.find('mode=none') == -1
+
+- name: Enable HSR on primary node
+  shell: |
+      source /usr/sap/{{ hana_sid | upper }}/home/.sapenv.sh && \
+      /usr/sap/{{ hana_sid | upper }}/HDB{{ hana_sysno }}/exe/hdbnsutil \
+      -sr_enable --name=SiteA
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  when: replication_primary is not defined
+...

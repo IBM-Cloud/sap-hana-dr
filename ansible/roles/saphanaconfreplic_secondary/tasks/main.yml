@@ -1,0 +1,93 @@
+---
+- name: Check SAP HANA replication status on secondary node
+  shell: "su - {{ hana_sid|lower }}adm -c 'hdbnsutil -sr_state --sapcontrol=1'"
+  args:
+    warn: false
+  register: repl_status_secondary
+  changed_when: False
+  when: hana_sid is defined
+
+- name: Set SAP HANA replication status variable for secondary node
+  set_fact:
+    replication_secondary: "yes"
+  when: repl_status_secondary.stdout.find('operation mode=logreplay') != -1 and repl_status_secondary.stdout.find('mode=async') != -1
+
+- name: Check for HANA Instance status
+  shell: |
+      /usr/sap/hostctrl/exe/sapcontrol -nr {{ hana_sysno }} -function GetSystemInstanceList
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  register: getinstancestatus_output
+  when: replication_secondary is not defined
+
+- name: Set variable hanastarted
+  set_fact:
+    hanastarted: yes
+  when: 'replication_secondary is not defined and "GRAY" not in getinstancestatus_output.stdout'
+
+- name: Replace the holders in the output with the appropriate values
+  set_fact:
+    replication_params: "{{ (replication_params | regex_replace(replace_item.old_val, replace_item.new_val)) }}"
+  loop:
+    - { old_val: '<hdb_host_primary>', new_val: "{{ hdb_host_primary }}" }
+    - { old_val: '<hdb_hostname_primary>', new_val: "{{ hdb_hostname_primary }}" }
+  loop_control:
+    loop_var: replace_item
+  when: hanastarted is defined and replication_secondary is not defined
+
+- name: Check for the unset backup parameters for SAP HANA SYSTEMDB
+  shell: |
+    export HISTCONTROL=ignorespace
+     su - {{ hana_sid|lower }}adm -c "hdbsql -d SYSTEMDB -u SYSTEM -p \"{{ hana_main_password }}\" -i {{ hana_sysno }} \"select key, value from M_CONFIGURATION_PARAMETER_VALUES where file_name = 'global.ini' and layer_name = 'SYSTEM' and section = '{{ p_system_un.section }}' and key = '{{ p_system_un.param }}'\""
+  args:
+    warn: false
+  loop: "{{ replication_params | list }}"
+  loop_control:
+    loop_var: p_system_un
+  register: systemdb_param_status
+  when: hanastarted is defined and replication_secondary is not defined and replication_params is defined
+  changed_when: False
+  # no_log: True
+
+- name: Gather the unset parameters for SAP HANA SYSTEMDB
+  set_fact:
+    systemdb_param_to_set: "{{ systemdb_param_to_set|default([]) + [systemdb_param_res.p_system_un] }}"
+  loop: "{{ systemdb_param_status.results | list }}"
+  loop_control:
+    loop_var: systemdb_param_res
+  when: 'hanastarted is defined and replication_secondary is not defined and replication_params is defined and ("KEY,VALUE\n0 rows selected" in systemdb_param_res.stdout)'
+  no_log: True
+
+- name: Check the backup parameters where the values are not set as expected for SAP HANA SYSTEMDB
+  shell: su - {{ hana_sid|lower }}adm -c "hdbsql -d SYSTEMDB -u SYSTEM -p \"{{ hana_main_password }}\" -i {{ hana_sysno }} \"select key, value from M_CONFIGURATION_PARAMETER_VALUES where file_name = 'global.ini' and layer_name = 'SYSTEM' and section = '{{ p_system.section }}' and key = '{{ p_system.param }}' and value != '{{ p_system.value }}'\""
+  args:
+    warn: false
+  loop: "{{ replication_params | list }}"
+  loop_control:
+    loop_var: p_system
+  register: systemdb_param_difstatus
+  when: hanastarted is defined and replication_secondary is not defined and replication_params is defined
+  changed_when: False
+  no_log: True
+
+- name: Gather the backup parameters where the values are not set as expected for SAP HANA SYSTEMDB
+  set_fact:
+    systemdb_param_to_set: "{{ systemdb_param_to_set|default([]) + [systemdb_param_res1.p_system] }}"
+  loop: "{{ systemdb_param_difstatus.results | list }}"
+  loop_control:
+    loop_var: systemdb_param_res1
+  when: 'hanastarted is defined and replication_secondary is not defined and replication_params is defined and ("KEY,VALUE\n0 rows selected" not in systemdb_param_res1.stdout)'
+  no_log: True
+
+- name: Set the parameters for SAP HANA SYSTEMDB in order to enable the replication
+  shell: su - {{ hana_sid|lower }}adm -c "hdbsql -d SYSTEMDB -u SYSTEM -p \"{{ hana_main_password }}\" -i {{ hana_sysno }} \"ALTER SYSTEM ALTER CONFIGURATION ('global.ini', 'SYSTEM') SET ('{{ item_repl.section }}' , '{{ item_repl.param }}') = '{{ item_repl.value }}' WITH RECONFIGURE\""
+  args:
+    warn: false
+  loop: "{{ systemdb_param_to_set | list }}"
+  loop_control:
+    loop_var: item_repl
+  no_log: True
+  when: hanastarted is defined and systemdb_param_to_set is defined and (systemdb_param_to_set | list | length) > 0
+...

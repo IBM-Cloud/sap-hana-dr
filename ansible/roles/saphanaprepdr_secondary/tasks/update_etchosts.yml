@@ -1,0 +1,13 @@
+---
+- name: Replace the content of /etc/hosts file from secondary node with the content from primary node
+  copy:
+    src: /tmp/{{ hdb_hostname_primary }}/etchosts/hosts
+    dest: /etc/hosts
+    owner: root
+    group: root
+
+- name: Delete local hosts file
+  ansible.builtin.file:
+    path: "/tmp/{{ hdb_hostname_primary }}/etchosts"
+    state: absent
+...

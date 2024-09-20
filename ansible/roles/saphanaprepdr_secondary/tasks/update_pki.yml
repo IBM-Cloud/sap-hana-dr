@@ -1,0 +1,38 @@
+---
+- name: Check the status of \"/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/data/SSFS_{{ hana_sid | upper }}.DAT_old\" file
+  stat:
+    path: "/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/data/SSFS_{{ hana_sid | upper }}.DAT_old"
+  register: dat_old_status
+
+- name: Check the status of \"/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/key/SSFS_{{ hana_sid | upper }}.KEY_old\" file
+  stat:
+    path: "/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/key/SSFS_{{ hana_sid | upper }}.KEY_old"
+  register: key_old_status
+
+- name: Rename PKI DAT file
+  command: "mv /usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/data/SSFS_{{ hana_sid | upper }}.DAT /usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/data/SSFS_{{ hana_sid | upper }}.DAT_old"
+  when: not dat_old_status.stat.exists
+
+- name: Rename PKI KEY file
+  command: "mv /usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/key/SSFS_{{ hana_sid | upper }}.KEY /usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/key/SSFS_{{ hana_sid | upper }}.KEY_old"
+  when: not key_old_status.stat.exists
+
+- name: Copy primary node PKI to secondary
+  copy:
+    src: "/tmp/{{ hdb_hostname_primary }}/pki/{{ pki_key.file }}"
+    dest: "{{ pki_key.path }}{{ pki_key.file }}"
+    owner: "{{ hana_sid | lower }}adm"
+    group: sapsys
+    mode: "{{ pki_key.mode }}"
+  loop:
+    - { path: '/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/data/', file: 'SSFS_{{ hana_sid | upper }}.DAT', mode: '0600' }
+    - { path: '/usr/sap/{{ hana_sid | upper }}/SYS/global/security/rsecssfs/key/', file: 'SSFS_{{ hana_sid | upper }}.KEY', mode: '0640' }
+  loop_control:
+    loop_var: pki_key
+  when: not key_old_status.stat.exists
+
+- name: Delete local PKI files
+  ansible.builtin.file:
+    path: "/tmp/{{ hdb_hostname_primary }}/pki"
+    state: absent
+...

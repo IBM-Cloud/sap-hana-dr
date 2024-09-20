@@ -1,0 +1,7 @@
+---
+- name: Update /etc/hosts on SAP HANA secondary node
+  include_tasks: "update_etchosts.yml"
+
+- name: Update PKI on SAP HANA secondary node
+  include_tasks: "update_pki.yml"
+...

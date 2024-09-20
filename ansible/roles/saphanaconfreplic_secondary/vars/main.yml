@@ -1,0 +1,16 @@
+replication_params:
+  - section: system_replication_hostname_resolution
+    param: <hdb_host_primary>
+    value: <hdb_hostname_primary>
+  - section: system_replication_communication
+    param: enable_ssl
+    value: "off"
+  - section: system_replication
+    param: enable_log_compression
+    value: "true"
+  - section: system_replication
+    param: enable_data_compression
+    value: "true"
+  - section: system_replication
+    param: datashipping_parallel_channels
+    value: "32"

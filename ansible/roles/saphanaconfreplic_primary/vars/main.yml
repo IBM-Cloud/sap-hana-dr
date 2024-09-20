@@ -1,0 +1,16 @@
+replication_params:
+  - section: system_replication_hostname_resolution
+    param: <hdb_host_dr>
+    value: <hdb_hostname_dr>
+  - section: system_replication_communication
+    param: allowed_sender
+    value: <hdb_host_dr>
+  - section: system_replication_communication
+    param: enable_ssl
+    value: "off"
+  - section: inifile_checker
+    param: enable
+    value: "true"
+  - section: inifile_checker
+    param: replicate
+    value: "true"

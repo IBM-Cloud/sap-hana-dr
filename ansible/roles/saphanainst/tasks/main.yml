@@ -1,0 +1,47 @@
+---
+- name: Check if HANA DB was already installed
+  stat:
+    path: "/hana/shared/{{ hana_sid|upper }}/exe/linuxx86_64/hdb"
+  register: hdb_install_status
+
+- name: Import install kit
+  include_tasks: "install_kit.yml"
+  when: not hdb_install_status.stat.exists
+
+- name: Generate parameter file for hdblcm
+  template:
+      src: hanaconfig.cfg
+      dest: "{{ hana_kit }}/hanaconfig.cfg"
+  when: not hdb_install_status.stat.exists
+
+- name: Start SAP HANA DB installation
+  shell: "{{ hana_kit }}/DATA_UNITS/HDB_SERVER_LINUX_X86_64/hdblcm --configfile={{ hana_kit }}/hanaconfig.cfg -b"
+  when: not hdb_install_status.stat.exists
+
+- name: The list of SAP HANA Tenant databases
+  set_fact:
+    hana_tenant_list: "{{ hana_tenants.split(',') | list | upper }}"
+
+- name: Check for existent SAP HANA Tenant list
+  shell: |
+    set -o pipefail
+    su - {{ hana_sid|lower }}adm -c "hdbnsutil -printsysteminformation | grep -v SYSTEMDB"
+  register: sysinfo_cmd
+  changed_when: false
+  when: hana_sid is defined
+
+- name: Create SAP HANA Tenant if it doesn't exist
+  shell: |
+    export HISTCONTROL=ignorespace
+     su - {{ hana_sid|lower }}adm -c "hdbsql -d SYSTEMDB -u SYSTEM -p \"{{ hana_main_password }}\" -i {{ hana_sysno }} \"CREATE DATABASE {{ hana_tenant | upper }} SYSTEM USER PASSWORD \\\"{{ hana_main_password }}\\\"\""
+  # no_log: true
+  loop: "{{ hana_tenant_list }}"
+  loop_control:
+    loop_var: hana_tenant
+  when: hana_tenant | upper not in sysinfo_cmd.stdout
+
+- name: Cleanup
+  file:
+    path: "{{ hana_kit }}"
+    state: absent
+...

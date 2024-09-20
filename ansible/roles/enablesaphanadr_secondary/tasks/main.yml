@@ -1,0 +1,73 @@
+---
+- name: Check SAP HANA replication status on secondary node
+  shell: "su - {{ hana_sid|lower }}adm -c 'hdbnsutil -sr_state --sapcontrol=1'"
+  args:
+    warn: false
+  register: repl_status_secondary
+  changed_when: False
+  when: hana_sid is defined
+
+- name: Set SAP HANA replication status variable for secondary node
+  set_fact:
+    replication_secondary: "yes"
+  when: repl_status_secondary.stdout.find('operation mode=logreplay') != -1 and repl_status_secondary.stdout.find('mode=async') != -1
+
+- name: Check for HANA Instance status
+  shell: |
+      /usr/sap/hostctrl/exe/sapcontrol -nr {{ hana_sysno }} -function GetSystemInstanceList
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  register: getinstancestatus_output
+  changed_when: False
+  when: replication_secondary is not defined
+
+- name: Set variable hanastarted
+  set_fact:
+    hanastarted: yes
+  when: 'replication_secondary is not defined and "GRAY" not in getinstancestatus_output.stdout'
+
+- name: Stop HANA Instance on Secondary node
+  shell: |
+      /usr/sap/hostctrl/exe/sapcontrol -nr {{ hana_sysno }} -function StopSystem HDB
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  when: hanastarted is defined
+
+- name: Wait until HANA Instance is stopped
+  shell: |
+      /usr/sap/hostctrl/exe/sapcontrol -nr {{ hana_sysno }} -function GetSystemInstanceList
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  register: getinstance_output
+  until: '"GRAY" in getinstance_output.stdout'
+  retries: 200
+  delay: 10
+  when: hanastarted is defined
+
+- name: Enable HSR on secondary node
+  shell: |
+      source /usr/sap/{{ hana_sid | upper }}/home/.sapenv.sh && \
+      /usr/sap/{{ hana_sid | upper }}/HDB{{ hana_sysno }}/exe/hdbnsutil \
+      -sr_register --name=SiteB --remoteHost={{ hdb_hostname_primary }} --remoteInstance={{ hdb_instance_number }} \
+      -replicationMode=async --operationMode=logreplay
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  when: replication_secondary is not defined
+
+- name: Start HANADB on standby node
+  shell: |
+      /usr/sap/hostctrl/exe/sapcontrol -nr {{ hana_sysno }} -function StartSystem HDB
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ hana_sid | lower }}adm"
+  when: replication_secondary is not defined and hanastarted is defined
+...

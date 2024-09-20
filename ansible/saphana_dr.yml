@@ -1,0 +1,10 @@
+---
+- name: Configure DR on Primary HANA VSI
+  ansible.builtin.import_playbook: confsaphanadr_primary.yml
+- name: Prepare SAP HANA Secondary VSI and Configure DR
+  ansible.builtin.import_playbook: prepsaphana_secondary.yml
+- name: Enable DR on Primary HANA VSI
+  ansible.builtin.import_playbook: enablesaphanadr_primary.yml
+- name: Enable DR on Secondary HANA VSI
+  ansible.builtin.import_playbook: enablesaphanadr_secondary.yml
+...

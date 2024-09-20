@@ -1,0 +1,7 @@
+---
+- name: Enable hostname resolve for the secondary db server
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hdb_host_dr }} {{ hdb_hostname_dr }}"
+  when: (hdb_host_dr is defined) and (hdb_hostname_dr is defined)
+...

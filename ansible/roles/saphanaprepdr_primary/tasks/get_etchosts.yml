@@ -1,0 +1,17 @@
+---
+- name: Create a temporary directory to store /etc/hosts content
+  ansible.builtin.file:
+    path: "/tmp/{{ hdb_hostname_primary }}/etchosts"
+    state: directory
+    recurse: yes
+    owner: root
+    group: root
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Get /etc/hosts content
+  fetch:
+    src: /etc/hosts
+    dest: "/tmp/{{ hdb_hostname_primary }}/etchosts/"
+    flat: yes
+...

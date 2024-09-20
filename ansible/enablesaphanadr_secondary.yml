@@ -1,0 +1,9 @@
+---
+- hosts: db_host_dr
+  gather_facts: yes
+  pre_tasks:
+    - name: Import playbook variables
+      include_vars: "saphana-vars.yml"
+  roles:
+    - enablesaphanadr_secondary
+...
