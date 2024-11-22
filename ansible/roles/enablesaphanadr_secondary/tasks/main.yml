@@ -54,7 +54,7 @@
   shell: |
       source /usr/sap/{{ hana_sid | upper }}/home/.sapenv.sh && \
       /usr/sap/{{ hana_sid | upper }}/HDB{{ hana_sysno }}/exe/hdbnsutil \
-      -sr_register --name=SiteB --remoteHost={{ hdb_hostname_primary }} --remoteInstance={{ hdb_instance_number }} \
+      -sr_register --name=SiteB --remoteHost={{ hdb_hostname_primary }} --remoteInstance={{ hana_sysno }} \
       -replicationMode=async --operationMode=logreplay
   args:
     executable: /bin/bash

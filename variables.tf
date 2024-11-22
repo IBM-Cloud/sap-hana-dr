@@ -56,8 +56,8 @@ variable "REGION" {
 	type		= string
 	description	= "The cloud region where the SAP HANA Primary System is deployed. The regions and zones for VPC are listed here:https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones#zones-vpc."
 	validation {
-		condition     = contains(["au-syd", "jp-osa", "jp-tok", "eu-de", "eu-gb", "ca-tor", "us-south", "us-east", "br-sao"], var.REGION )
-		error_message = "For CLI deployments, the REGION must be one of: au-syd, jp-osa, jp-tok, eu-de, eu-gb, ca-tor, us-south, us-east, br-sao. \n For Schematics, the REGION must be one of: eu-de, eu-gb, us-south, us-east."
+		condition     = contains(["eu-de", "eu-gb", "us-south", "us-east", "ca-tor", "au-syd", "jp-osa", "jp-tok", "eu-es", "br-sao"], var.REGION )
+		error_message = "The REGION must be one of: eu-de, eu-gb, us-south, us-east, ca-tor, au-syd, jp-osa, jp-tok, eu-es, br-sao."
 	}
 }
 
@@ -85,8 +85,8 @@ variable "REGION_DR" {
 	type		= string
 	description	= "The cloud region where to deploy the SAP HANA Secondary System. The regions and zones for VPC are listed here:https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones#zones-vpc."
 	validation {
-		condition     = contains(["au-syd", "jp-osa", "jp-tok", "eu-de", "eu-gb", "ca-tor", "us-south", "us-east", "br-sao"], var.REGION_DR )
-		error_message = "For CLI deployments, the REGION must be one of: au-syd, jp-osa, jp-tok, eu-de, eu-gb, ca-tor, us-south, us-east, br-sao. \n For Schematics, the REGION must be one of: eu-de, eu-gb, us-south, us-east."
+		condition     = contains(["eu-de", "eu-gb", "us-south", "us-east", "ca-tor", "au-syd", "jp-osa", "jp-tok", "eu-es", "br-sao"], var.REGION_DR )
+		error_message = "The REGION must be one of: eu-de, eu-gb, us-south, us-east, ca-tor, au-syd, jp-osa, jp-tok, eu-es, br-sao."
 	}
 }
 
@@ -94,7 +94,7 @@ variable "ZONE_DR" {
 	type		= string
 	description	= "The cloud zone where to deploy the SAP HANA Secondary System. The available regions and zones for VPC can be found here: https://cloud.ibm.com/docs/containers?topic=containers-regions-and-zones#zones-vpc"
 	validation {
-		condition     = length(regexall("^(au-syd|jp-osa|jp-tok|eu-de|eu-gb|ca-tor|us-south|us-east|br-sao)-(1|2|3)$", var.ZONE_DR)) > 0
+		condition     = length(regexall("^(eu-de|eu-gb|us-south|us-east|ca-tor|au-syd|jp-osa|jp-tok|eu-es|br-sao)-(1|2|3)$", var.ZONE_DR)) > 0
 		error_message = "The ZONE is not valid."
 	}
 }
@@ -230,42 +230,6 @@ resource "null_resource" "check_profile" {
 # The variables and data sources used in SAP Ansible Modules.
 ##############################################################
 
-variable "HANA_SID" {
-	type		= string
-	description = "EXISTING SAP HANA system ID on the primary SAP HANA system. The SAP system ID identifies the SAP HANA system. Should follow the SAP rules for SID naming."
-	validation {
-		condition     = length(regexall("^[a-zA-Z][a-zA-Z0-9][a-zA-Z0-9]$", var.HANA_SID)) > 0  && !contains(["ADD", "ALL", "AMD", "AND", "ANY", "ARE", "ASC", "AUX", "AVG", "BIT", "CDC", "COM", "CON", "DBA", "END", "EPS", "FOR", "GET", "GID", "IBM", "INT", "KEY", "LOG", "LPT", "MAP", "MAX", "MIN", "MON", "NIX", "NOT", "NUL", "OFF", "OLD", "OMS", "OUT", "PAD", "PRN", "RAW", "REF", "ROW", "SAP", "SET", "SGA", "SHG", "SID", "SQL", "SUM", "SYS", "TMP", "TOP", "UID", "USE", "USR", "VAR"], var.HANA_SID)
-		error_message = "The HANA_SID is not valid."
-	}
-}
-
-variable "HANA_SYSNO" {
-	type		= string
-	description = "EXISTING SAP HANA instance number on the primary SAP HANA system. Specifies the instance number of the SAP HANA system. Should follow the SAP rules for instance number naming"
-	validation {
-		condition     = var.HANA_SYSNO >= 0 && var.HANA_SYSNO <=97
-		error_message = "The HANA_SYSNO is not valid."
-	}
-}
-
-variable "HANA_TENANTS" {
-	type        = list(string)
-	description = "A list of EXISTING SAP HANA tenant databases on the primary SAP HANA system. Examples: [\"HDB\"] or [\"Ten_HDB1\", \"Ten_HDB2\", ..., \"Ten_HDBn\"]"
-	validation {
-		condition     = length(var.HANA_TENANTS) > 0
-		error_message = "SAP HANA Tenant list can not be empty. Examples: [\"HDB\"] or [\"Ten1\", \"Ten2\"]"
-	}
-	validation {
-		condition     = alltrue([for tenant in var.HANA_TENANTS : !contains(["ADD", "ALL", "AMD", "AND", "ANY", "ARE", "ASC", "AUX", "AVG", "BIT", "CDC", "COM", "CON", "DBA", "END", "EPS", "FOR", "GET", "GID", "IBM", "INT", "KEY", "LOG", "LPT", "MAP", "MAX", "MIN", "MON", "NIX", "NOT", "NUL", "OFF", "OLD", "OMS", "OUT", "PAD", "PRN","RAW","REF","ROW","SAP","SET","SGA","SHG","SID","SQL","SUM","SYS","TMP","TOP","UID","USE","USR","VAR"], upper(tenant))])
-		error_message = "${join(", ", var.HANA_TENANTS)} is an invalid hana_tenant value."
-	}
-	validation {
-		condition     = alltrue([for tenant in var.HANA_TENANTS : length(upper(tenant)) <= 253]) && alltrue([for s in var.HANA_TENANTS : can(regex("^\\w+$", s))])
-		error_message = "${join(", ", var.HANA_TENANTS)} contains invalid hana_tenant values."
-	}
-
-}
-
 variable "HANA_MAIN_PASSWORD" {
 	type		= string
 	sensitive = true
@@ -273,25 +237,6 @@ variable "HANA_MAIN_PASSWORD" {
 	validation {
 		condition     = length(regexall("^(.{0,7}|.{15,}|[^0-9a-zA-Z]*)$", var.HANA_MAIN_PASSWORD)) == 0 && length(regexall("^[^0-9_][0-9a-zA-Z!@#$_]+$", var.HANA_MAIN_PASSWORD)) > 0
 		error_message = "The HANA_MAIN_PASSWORD is not valid."
-	}
-}
-
-variable "HANA_SYSTEM_USAGE" {
-	type		= string
-	description = "EXISTING system usage of the primary SAP HANA system. Valid values: \"production\", \"test\", \"development\", \"custom\"."
-	validation {
-		condition     = contains(["production", "test", "development", "custom" ], var.HANA_SYSTEM_USAGE )
-		error_message = "The HANA_SYSTEM_USAGE must be one of: production, test, development, custom."
-	}
-}
-
-variable "HANA_COMPONENTS" {
-	type		= string
-	description = "EXISTING SAP HANA components on the primary SAP HANA system. Valid values: \"all\", \"client\", \"es\", \"ets\", \"lcapps\", \"server\", \"smartda\", \"streaming\", \"rdsync\", \"xs\", \"studio\", \"afl\", \"sca\", \"sop\", \"eml\", \"rme\", \"rtl\", \"trp\"."
-	default		= "server"
-	validation {
-		condition     = contains(["all", "client", "es", "ets", "lcapps", "server", "smartda", "streaming", "rdsync", "xs", "studio", "afl", "sca", "sop", "eml", "rme", "rtl", "trp" ], var.HANA_COMPONENTS )
-		error_message = "The HANA_COMPONENTS must be one of: all, client, es, ets, lcapps, server, smartda, streaming, rdsync, xs, studio, afl, sca, sop, eml, rme, rtl, trp."
 	}
 }
 

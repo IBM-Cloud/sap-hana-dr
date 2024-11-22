@@ -111,12 +111,7 @@ DB_IMAGE | The OS image of SAP HANA Primary Server. A list of images is availabl
 
 Parameter | Description | Requirements
 ----------|-------------|-------------
-HANA_SID | EXISTING SAP HANA system ID on the primary SAP HANA system. The SAP system ID identifies the SAP HANA system | <ul><li>Consists of exactly three alphanumeric characters</li><li>Has a letter for the first character</li><li>Does not include any of the reserved IDs listed in SAP Note 1979280</li></ul>|
-HANA_TENANTS | A list of EXISTING SAP HANA tenant databases on the primary SAP HANA system.| 
-HANA_SYSNO | EXISTING SAP HANA instance number on the primary SAP HANA system. Specifies the instance number of the SAP HANA system| <ul><li>Two-digit number from 00 to 97</li><li>Must be unique on a host</li></ul>
 HANA_MAIN_PASSWORD | Common password for all users that are created during the installation (See Obs*). | <ul><li>It must be 8 to 14 characters long</li><li>It must consist of at least one digit (0-9), one lowercase letter (a-z), and one uppercase letter (A-Z).</li><li>It can only contain the following characters: a-z, A-Z, 0-9, !, @, #, $, _</li><li>It must not start with a digit or an underscore ( _ )</li></ul> <br /> (Sensitive* value)
-HANA_SYSTEM_USAGE  | EXISTING System usage of the primary SAP HANA system. | <br> Valid values: production, test, development, custom
-HANA_COMPONENTS | EXISTING SAP HANA components on the primary SAP HANA system. | Default: server<br> Valid values: all, client, es, ets, lcapps, server, smartda, streaming, rdsync, xs, studio, afl, sca, sop, eml, rme, rtl, trp
 KIT_SAPHANA_FILE | Path to SAP HANA ZIP file (See Obs*). | As downloaded from SAP Support Portal
 
 Parameter | Description | Requirements
@@ -342,26 +337,6 @@ DB_IMAGE = "ibm-redhat-8-6-amd64-sap-hana-6"
 ##########################################################
 # SAP HANA configuration
 ##########################################################
-
-HANA_SID = "HDB"
-# EXISTING SAP HANA system ID on the primary SAP HANA system. Should follow the SAP rules for SID naming.
-# Example: HANA_SID = "HDB"
-
-HANA_SYSNO = "00"
-# EXISTING SAP HANA instance number on the primary SAP HANA system. Should follow the SAP rules for instance number naming.
-# Example: HANA_SYSNO = "01"
-
-HANA_TENANTS = ["HDB"]
-# A list of EXISTING SAP HANA tenant databases on the primary SAP HANA system.
-# Examples: HANA_TENANTS = ["HDB"] or HANA_TENANTS = ["Ten_HDB1", "Ten_HDB2", ..., "Ten_HDBn"]
-
-HANA_SYSTEM_USAGE = "custom"
-# EXISTING System usage of the primary SAP HANA system. Default: custom. Suported values: production, test, development, custom
-# Example: HANA_SYSTEM_USAGE = "custom"
-
-HANA_COMPONENTS = "server"
-# EXISTING SAP HANA components on the primary SAP HANA system. Default: server. Supported values: all, client, es, ets, lcapps, server, smartda, streaming, rdsync, xs, studio, afl, sca, sop, eml, rme, rtl, trp
-# Example: HANA_COMPONENTS = "server"
 
 KIT_SAPHANA_FILE = "/storage/HANADB/SP07/Rev73/51057281.ZIP"
 # SAP HANA Installation kit path

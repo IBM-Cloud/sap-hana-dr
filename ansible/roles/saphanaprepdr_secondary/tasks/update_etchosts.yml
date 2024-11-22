@@ -1,13 +1,8 @@
 ---
-- name: Replace the content of /etc/hosts file from secondary node with the content from primary node
-  copy:
-    src: /tmp/{{ hdb_hostname_primary }}/etchosts/hosts
-    dest: /etc/hosts
-    owner: root
-    group: root
-
-- name: Delete local hosts file
-  ansible.builtin.file:
-    path: "/tmp/{{ hdb_hostname_primary }}/etchosts"
-    state: absent
+  - name: Replace the content of /etc/hosts from secondary SAP HANA system withe the content of /etc/hosts from primary SAP HANA system
+    ansible.builtin.copy:
+      content: "{{ hostvars['db_host_primary']['etc_hosts']['content'] | b64decode }}"
+      dest: /etc/hosts
+      owner: root
+      group: root
 ...

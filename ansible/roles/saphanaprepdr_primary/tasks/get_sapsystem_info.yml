@@ -1,0 +1,104 @@
+---
+- name: Detect the default SAP HANA profile file
+  shell: ls /usr/sap/*/SYS/profile/DEFAULT.PFL
+  register: profile_default
+  when: hdb_host_primary is defined
+  changed_when: False
+
+- name: Detect the SID
+  set_fact:
+    hana_sid: "{{ profile_default.stdout.split('/')[3] }}"
+  when: profile_default.stdout|length > 0
+
+- name: Detected SAP HANA SID
+  debug:
+    var: hana_sid
+
+- name: Check for SAP HANA profile file
+  shell: "ls /usr/sap/{{ hana_sid | upper }}/SYS/profile/{{ hana_sid | upper }}_HDB*"
+  register: sid_profile
+  when: hana_sid is defined
+  changed_when: False
+
+- name: Detect the instance number
+  set_fact:
+    hana_sysno: "{{ sid_profile.stdout.split('/')[-1].split('HDB')[-1].split('_')[0] }}"
+
+- name: Detected SAP HANA instance number
+  debug:
+    var: hana_sysno
+
+- name: Check for the tenant databses ini files
+  shell: "ls /hana/shared/{{ hana_sid | upper }}/global/hdb/custom/config/DB_*/global.ini"
+  register: tenant_globalini_files
+  when: hana_sid is defined
+  changed_when: False
+
+- name: Create a list of ini files
+  set_fact:
+    tenant_globalini_list: "{{ tenant_globalini_files.stdout.split('\n') }}"
+
+- name: Create the list of tenants
+  set_fact:
+    hana_tenants: "{{ hana_tenants| default([]) + [ten_file.split('/global.ini')[0].split('/')[-1].split('DB_')[1] ] }}"
+  loop: "{{ tenant_globalini_list | list }}"
+  loop_control:
+    loop_var: ten_file
+
+- name: Detected SAP HANA tenant list
+  debug:
+    var: hana_tenants
+
+- name: Find the host global.ini file
+  find:
+    paths: "/hana/shared/{{ hana_sid|upper }}/exe/linuxx86_64/"
+    patterns: "global.ini"
+    file_type: "file"
+    recurse: yes
+  register: globalini_file
+
+- name: Detect the SAP HANA system usage line in global.ini file
+  shell: "grep '^usage' {{ globalini_file.files[0].path }}"
+  register: hana_system_usage_line
+  when: globalini_file is defined
+  changed_when: False
+
+- name: Detect the SAP HANA system usage
+  set_fact:
+    hana_system_usage: "{{ hana_system_usage_line.stdout.split('=')[1] | trim }}"
+  when: hana_system_usage_line is defined
+
+- name: Detected SAP HANA system usage
+  debug:
+    var: hana_system_usage
+
+- name: Get the SAP HANA installed components as a table
+  shell: "/hana/shared/{{ hana_sid|upper }}/hdblcm/hdblcm --action print_component_list --format=table"
+  register: hana_components_table
+  when:  hana_sid is defined
+  changed_when: False
+
+- name: Create a list of SAP HANA components
+  set_fact:
+    hana_components_list: "{{ hana_components_list| default([]) + [component_line.split('|')[-1]|trim] }}"
+  loop: "{{ hana_components_table.stdout.split('\n') | list }}"
+  loop_control:
+    loop_var: component_line
+  when: '"----------" not in component_line and "Batch Key" not in component_line and (component_line | length > 0)'
+
+- name: Get the SAP HANA components string
+  set_fact:
+    hana_components_string: "{{ hana_components_string| default('') + component + ',' }}"
+  loop: "{{ hana_components_list | list }}"
+  loop_control:
+    loop_var: component
+  when: hana_components_list is defined
+
+- name: Detect the SAP HANA components
+  set_fact:
+    hana_components: "{{ hana_components_string | regex_replace(',$', '') }}"
+
+- name: Detected SAP HANA components
+  debug:
+    var: hana_components
+...

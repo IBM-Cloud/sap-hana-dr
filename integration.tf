@@ -21,17 +21,11 @@ resource "local_file" "ansible_saphana-vars" {
 hana_profile: "${var.DB_PROFILE}"
 
 # HANA DB configuration for PRIMARY and DR
-hana_sid: "${upper(trimspace(var.HANA_SID))}"
-hana_sysno: "${trimspace(var.HANA_SYSNO)}"
-hana_tenants: "${join(",", var.HANA_TENANTS)}"
 hana_main_password: "${trimspace(var.HANA_MAIN_PASSWORD)}"
-hana_system_usage: "${trimspace(var.HANA_SYSTEM_USAGE)}"
-hana_components: "${trimspace(var.HANA_COMPONENTS)}"
 hdb_host_dr: "${local.ip_dr}"
 hdb_hostname_dr: "${trimspace(var.DB_HOSTNAME_DR)}" 
 hdb_host_primary: "${local.ip_primary}"
 hdb_hostname_primary: "${trimspace(var.DB_HOSTNAME_PRIMARY)}" 
-hdb_instance_number: "${trimspace(var.HANA_SYSNO)}"
 
 # SAP HANA Installation kit path
 kit_saphana_file: "${trimspace(var.KIT_SAPHANA_FILE)}"

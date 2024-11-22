@@ -1,10 +1,13 @@
 ---
-- name: Get PKI from SAP HANA primary node
-  include_tasks: "get_pki.yml"
-
 - name: Update /etc/hosts on SAP HANA primary node
   include_tasks: "secondary_hostname_resolve.yml"
 
 - name: Get /etc/hosts from SAP HANA primary node
   include_tasks: "get_etchosts.yml"
+
+- name: Get information from existing SAP HANA System
+  include_tasks: "get_sapsystem_info.yml"
+
+- name: Get PKI from SAP HANA primary node
+  include_tasks: "get_pki.yml"
 ...

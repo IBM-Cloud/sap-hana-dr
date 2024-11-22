@@ -20,7 +20,7 @@
 
 - name: The list of SAP HANA Tenant databases
   set_fact:
-    hana_tenant_list: "{{ hana_tenants.split(',') | list | upper }}"
+    hana_tenant_list: "{{ hana_tenants | list | upper }}"
 
 - name: Check for existent SAP HANA Tenant list
   shell: |

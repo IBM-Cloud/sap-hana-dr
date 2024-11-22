@@ -1,6 +1,13 @@
 ---
 - hosts: db_host_dr
   gather_facts: yes
+  vars: 
+    hana_sid: "{{ hostvars['db_host_primary']['hana_sid'] }}"
+    hana_sysno: "{{ hostvars['db_host_primary']['hana_sysno'] }}"
+    hana_tenants: "{{ hostvars['db_host_primary']['hana_tenants'] }}"
+    hana_system_usage: "{{ hostvars['db_host_primary']['hana_system_usage'] }}"
+    hana_components: "{{ hostvars['db_host_primary']['hana_components'] }}"
+
   pre_tasks:
     - name: Import playbook variables
       include_vars: "saphana-vars.yml"

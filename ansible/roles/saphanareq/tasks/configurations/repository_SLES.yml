@@ -1,5 +1,11 @@
 ---
+- name: Check if HANA DB was already installed
+  stat:
+    path: "/hana/shared/{{ hana_sid|upper }}/exe/linuxx86_64/hdb"
+  register: hdb_inst
+
 - name: Wait for SLES repo configurations
   wait_for:
     path: /etc/SUSEConnect
+  when: not hdb_inst.stat.exists
 ...

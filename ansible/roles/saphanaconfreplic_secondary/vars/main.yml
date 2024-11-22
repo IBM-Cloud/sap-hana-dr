@@ -7,10 +7,10 @@ replication_params:
     value: "off"
   - section: system_replication
     param: enable_log_compression
-    value: "true"
+    value: "TRUE"
   - section: system_replication
     param: enable_data_compression
-    value: "true"
+    value: "TRUE"
   - section: system_replication
     param: datashipping_parallel_channels
     value: "32"

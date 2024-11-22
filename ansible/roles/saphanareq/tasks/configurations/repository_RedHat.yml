@@ -1,4 +1,9 @@
 ---
+- name: Check if HANA DB was already installed
+  stat:
+    path: "/hana/shared/{{ hana_sid|upper }}/exe/linuxx86_64/hdb"
+  register: hdb_inst
+
 - name: Wait for cloud init to finish
   cloud_init_data_facts:
     filter: status
@@ -6,4 +11,5 @@
   until: "res.cloud_init_data_facts.status.v1.stage is defined and not res.cloud_init_data_facts.status.v1.stage"
   retries: 60
   delay: 10
+  when: not hdb_inst.stat.exists
 ...

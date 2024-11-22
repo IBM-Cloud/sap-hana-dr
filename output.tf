@@ -14,10 +14,6 @@ output "DB_PRIVATE_IP_PRIMARY" {
   value		= local.ip_primary  
 }
 
-output "HANA_SID" {
-  value		= var.HANA_SID
-}
-
 output "VPC_DR" {
   value		= var.VPC_DR
 }

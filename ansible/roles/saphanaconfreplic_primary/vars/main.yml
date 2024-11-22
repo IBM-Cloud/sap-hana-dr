@@ -10,7 +10,7 @@ replication_params:
     value: "off"
   - section: inifile_checker
     param: enable
-    value: "true"
+    value: "TRUE"
   - section: inifile_checker
     param: replicate
-    value: "true"
+    value: "TRUE"

@@ -115,26 +115,6 @@ DB_IMAGE = ""
 # SAP HANA configuration
 ##########################################################
 
-HANA_SID = ""
-# EXISTING SAP HANA system ID on the primary SAP HANA system. Should follow the SAP rules for SID naming.
-# Example: HANA_SID = "HDB"
-
-HANA_SYSNO = ""
-# EXISTING SAP HANA instance number on the primary SAP HANA system. Should follow the SAP rules for instance number naming.
-# Example: HANA_SYSNO = "01"
-
-HANA_TENANTS = [""]
-# A list of EXISTING SAP HANA tenant databases on the primary SAP HANA system.
-# Examples: HANA_TENANTS = ["HDB"] or HANA_TENANTS = ["Ten_HDB1", "Ten_HDB2", ..., "Ten_HDBn"]
-
-HANA_SYSTEM_USAGE = ""
-# EXISTING System usage of the primary SAP HANA system. Default: custom. Suported values: production, test, development, custom
-# Example: HANA_SYSTEM_USAGE = "custom"
-
-HANA_COMPONENTS = "server"
-# EXISTING SAP HANA components on the primary SAP HANA system. Default: server. Supported values: all, client, es, ets, lcapps, server, smartda, streaming, rdsync, xs, studio, afl, sca, sop, eml, rme, rtl, trp
-# Example: HANA_COMPONENTS = "server"
-
 KIT_SAPHANA_FILE = "/storage/HANADB/SP07/Rev73/51057281.ZIP"
 # SAP HANA Installation kit path
 # Example for Red Hat 8 or Suse 15: KIT_SAPHANA_FILE = "/storage/HANADB/SP07/Rev73/51057281.ZIP"

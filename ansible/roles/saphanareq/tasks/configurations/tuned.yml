@@ -17,5 +17,5 @@
 
 - name: Select sap-hana profile for tuned
   command: /usr/sbin/tuned-adm profile sap-hana
-  when: "'sap_hana' not in tuned_active.stdout"
+  when: "'sap-hana' not in tuned_active.stdout"
 ...
